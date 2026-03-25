@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Todo List</title>
+
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+}
+
+.container {
+    padding: 15px;
+}
+
+h1 {
+    text-align: center;
+}
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+input, button {
+    padding: 10px;
+    font-size: 16px;
+}
+
+button {
+    background: #007bff;
+    color: white;
+    border: none;
+}
+
+.item {
+    background: white;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.item button {
+    margin-top: 5px;
+    background: red;
+}
+
+@media(min-width: 600px){
+    .form {
+        flex-direction: row;
+    }
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+    <h1>Todo List</h1>
+
+    <div class="form">
+        <input type="text" id="descripcion" placeholder="Descripción">
+        <button id="btnAgregar">Añadir</button>
+    </div>
+
+    <div id="lista"></div>
+</div>
+
+<script>
+const descripcion = document.getElementById("descripcion");
+const btnAgregar = document.getElementById("btnAgregar");
+const lista = document.getElementById("lista");
+
+let tareas = [];
+
+
+function obtenerFechaHoy() {
+    const hoy = new Date();
+    return hoy.toLocaleDateString(); 
+}
+
+
+function cargarTareas() {
+    const data = localStorage.getItem("tareas");
+    if (data) {
+        tareas = JSON.parse(data);
+        mostrarTareas();
+    }
+}
+
+function guardarTareas() {
+    localStorage.setItem("tareas", JSON.stringify(tareas));
+}
+
+
+function mostrarTareas() {
+    lista.innerHTML = "";
+
+    tareas.forEach((tarea, index) => {
+        const div = document.createElement("div");
+        div.classList.add("item");
+
+        div.innerHTML = `
+            <p><strong>Descripción:</strong> ${tarea.descripcion}</p>
+            <p><strong>Fecha:</strong> ${tarea.fecha}</p>
+            <button onclick="eliminarTarea(${index})">Eliminar</button>
+        `;
+
+        lista.appendChild(div);
+    });
+}
+
+
+btnAgregar.addEventListener("click", () => {
+
+    if (descripcion.value === "") {
+        alert("Ingrese una descripción");
+        return;
+    }
+
+    const nuevaTarea = {
+        descripcion: descripcion.value,
+        fecha: obtenerFechaHoy()
+    };
+
+    tareas.push(nuevaTarea);
+
+    guardarTareas();
+    mostrarTareas();
+
+    descripcion.value = "";
+});
+
+
+function eliminarTarea(index) {
+    tareas.splice(index, 1);
+    guardarTareas();
+    mostrarTareas();
+}
+
+
+cargarTareas();
+</script>
+
+</body>
+</html>
