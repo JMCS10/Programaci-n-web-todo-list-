@@ -9,12 +9,8 @@
 body {
     font-family: Arial;
     margin: 0;
-    padding: 0;
+    padding: 10px;
     background: #f4f4f4;
-}
-
-.container {
-    padding: 15px;
 }
 
 h1 {
@@ -28,7 +24,7 @@ h1 {
 }
 
 input, button {
-    padding: 10px;
+    padding: 12px;
     font-size: 16px;
 }
 
@@ -42,109 +38,149 @@ button {
     background: white;
     padding: 10px;
     margin-top: 10px;
-    border-radius: 5px;
 }
 
-.item button {
+.completado {
+    text-decoration: line-through;
+    color: gray;
+}
+
+.acciones {
     margin-top: 5px;
+}
+
+.btn-eliminar {
     background: red;
 }
 
-@media(min-width: 600px){
-    .form {
-        flex-direction: row;
-    }
+.btn-editar {
+    background: orange;
 }
 </style>
 
 </head>
 <body>
 
-<div class="container">
-    <h1>Todo List</h1>
+<h1>Todo List</h1>
 
-    <div class="form">
-        <input type="text" id="descripcion" placeholder="Descripción">
-        <button id="btnAgregar">Añadir</button>
-    </div>
-
-    <div id="lista"></div>
+<div class="form">
+    <input type="text" id="descripcion" placeholder="Descripción">
+    <button onclick="agregarTarea()">Añadir</button>
 </div>
 
-<script>
-const descripcion = document.getElementById("descripcion");
-const btnAgregar = document.getElementById("btnAgregar");
-const lista = document.getElementById("lista");
+<div id="lista"></div>
 
-let tareas = [];
+<script>
+var tareas = [];
+var editando = -1;
 
 
 function obtenerFechaHoy() {
-    const hoy = new Date();
-    return hoy.toLocaleDateString(); 
+    var hoy = new Date();
+    return hoy.toLocaleDateString();
 }
 
 
-function cargarTareas() {
-    const data = localStorage.getItem("tareas");
-    if (data) {
-        tareas = JSON.parse(data);
-        mostrarTareas();
-    }
-}
-
-function guardarTareas() {
+function guardar() {
     localStorage.setItem("tareas", JSON.stringify(tareas));
 }
 
 
-function mostrarTareas() {
-    lista.innerHTML = "";
-
-    tareas.forEach((tarea, index) => {
-        const div = document.createElement("div");
-        div.classList.add("item");
-
-        div.innerHTML = `
-            <p><strong>Descripción:</strong> ${tarea.descripcion}</p>
-            <p><strong>Fecha:</strong> ${tarea.fecha}</p>
-            <button onclick="eliminarTarea(${index})">Eliminar</button>
-        `;
-
-        lista.appendChild(div);
-    });
+function cargar() {
+    var data = localStorage.getItem("tareas");
+    if (data != null) {
+        tareas = JSON.parse(data);
+        mostrar();
+    }
 }
 
+function mostrar() {
+    var lista = document.getElementById("lista");
+    lista.innerHTML = "";
 
-btnAgregar.addEventListener("click", () => {
+    for (var i = 0; i < tareas.length; i++) {
 
-    if (descripcion.value === "") {
-        alert("Ingrese una descripción");
+        var tarea = tareas[i];
+
+        var texto = "";
+
+        texto += "<div class='item'>";
+        texto += "<label>";
+        texto += "<input type='checkbox' onchange='cambiarEstado(" + i + ")'";
+
+        if (tarea.completado) {
+            texto += " checked";
+        }
+
+        texto += ">";
+
+        if (tarea.completado) {
+            texto += "<span class='completado'>" + tarea.descripcion + "</span>";
+        } else {
+            texto += "<span>" + tarea.descripcion + "</span>";
+        }
+
+        texto += "</label>";
+        texto += "<p>Fecha: " + tarea.fecha + "</p>";
+
+        texto += "<div class='acciones'>";
+        texto += "<button class='btn-editar' onclick='editar(" + i + ")'>Editar</button>";
+        texto += "<button class='btn-eliminar' onclick='eliminar(" + i + ")'>Eliminar</button>";
+        texto += "</div>";
+
+        texto += "</div>";
+
+        lista.innerHTML += texto;
+    }
+}
+
+function agregarTarea() {
+    var desc = document.getElementById("descripcion").value;
+
+    if (desc == "") {
+        alert("Ingrese una descripcion");
         return;
     }
 
-    const nuevaTarea = {
-        descripcion: descripcion.value,
-        fecha: obtenerFechaHoy()
-    };
+    if (editando == -1) {
+        var nueva = {
+            descripcion: desc,
+            fecha: obtenerFechaHoy(),
+            completado: false
+        };
+        tareas.push(nueva);
+    } else {
+        tareas[editando].descripcion = desc;
+        editando = -1;
+    }
 
-    tareas.push(nuevaTarea);
-
-    guardarTareas();
-    mostrarTareas();
-
-    descripcion.value = "";
-});
-
-
-function eliminarTarea(index) {
-    tareas.splice(index, 1);
-    guardarTareas();
-    mostrarTareas();
+    guardar();
+    mostrar();
+    document.getElementById("descripcion").value = "";
 }
 
+function eliminar(index) {
+    tareas.splice(index, 1);
+    guardar();
+    mostrar();
+}
 
-cargarTareas();
+function editar(index) {
+    document.getElementById("descripcion").value = tareas[index].descripcion;
+    editando = index;
+}
+
+function cambiarEstado(index) {
+    if (tareas[index].completado) {
+        tareas[index].completado = false;
+    } else {
+        tareas[index].completado = true;
+    }
+    guardar();
+    mostrar();
+}
+
+cargar();
 </script>
 
 </body>
